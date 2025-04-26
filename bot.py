@@ -1,6 +1,5 @@
 import logging
 from aiogram import Bot, Dispatcher
-from aiogram.types import BotCommand
 from dotenv import load_dotenv
 import os
 import asyncio
@@ -25,15 +24,6 @@ logger = logging.getLogger(__name__)
 # Загрузка переменных окружения
 load_dotenv()
 
-async def set_bot_commands(bot: Bot):
-    """Регистрация команд бота в меню"""
-    commands = [
-        BotCommand(command="start", description="Запустить бота"),
-        BotCommand(command="help", description="Справка и помощь"),
-        BotCommand(command="support", description="Связь с админом"),
-        BotCommand(command="about", description="Информация о боте"),
-    ]
-    await bot.set_my_commands(commands)
 
 async def main():
     """Основная функция запуска бота"""
@@ -64,9 +54,7 @@ async def main():
             logger.error(f"Ошибка инициализации БД: {db_error}")
             raise
         
-        # Настройка команд бота
-        await set_bot_commands(bot)
-        logger.info("Команды бота успешно зарегистрированы.")
+        #
         
         # Запуск бота
         logger.info("Запуск бота...")

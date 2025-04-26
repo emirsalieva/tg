@@ -11,9 +11,6 @@ DB_NAME = "bot.db"
 def get_db_connection():
     """Создает и возвращает соединение с базой данных"""
     conn = sqlite3.connect(DB_NAME)
-    # row_factory = sqlite3.Row может быть полезен, но для соответствия индексам item[0], item[1] в обработчиках,
-    # будем использовать стандартные кортежи. Если нужно, можно включить его в конкретных функциях.
-    # conn.row_factory = sqlite3.Row
     return conn
 
 def init_db():
