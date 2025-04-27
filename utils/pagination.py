@@ -32,7 +32,7 @@ def get_pagination_keyboard(page: int, total_pages: int, prefix: str) -> InlineK
     keyboard = []
     if len(buttons) > 2:
         keyboard.append(buttons[:-1])  # кнопки Назад/Вперёд
-        keyboard.append([buttons[-1]])  # кнопка Перейти
+        keyboard.append([buttons[-2]])  # кнопка Перейти
     else:
         keyboard.append(buttons)
 
