@@ -1,5 +1,6 @@
 import logging
 from aiogram import Bot, Dispatcher
+from aiogram.types import BotCommand
 from dotenv import load_dotenv
 import os
 import asyncio
@@ -8,9 +9,9 @@ import asyncio
 from handlers.main_handler import router as handlers_router
 from handlers.admin_handlers import router as admin_router
 from database.db_manager import init_db
-from handlers.admin_handlers import check_admin_access # Импортируем функцию проверки прав
-from database.db_manager import get_items_page, get_total_items_count # Импортируем функции получения данных из БД
-from utils.pagination_admin import register_pagination_handlers # Импортируем регистратор пагинации
+from handlers.admin_handlers import check_admin_access  
+from database.db_manager import get_items_page, get_total_items_count  
+from utils.pagination_admin import register_pagination_handlers 
 from utils.pagination import router as pagination_router
 
 
@@ -24,7 +25,6 @@ logger = logging.getLogger(__name__)
 # Загрузка переменных окружения
 load_dotenv()
 
-
 async def main():
     """Основная функция запуска бота"""
     try:
@@ -36,15 +36,15 @@ async def main():
         # Инициализация бота
         bot = Bot(token=BOT_TOKEN)
         dp = Dispatcher()
-        
+
         # Подключение роутеров
         dp.include_router(handlers_router)
         dp.include_router(admin_router)
         dp.include_router(pagination_router)
 
+        # Регистрация пагинации для админского роутера
         register_pagination_handlers(admin_router, check_admin_access, get_items_page, get_total_items_count)
 
-        
         # Инициализация БД
         logger.info("Инициализация базы данных...")
         try:
@@ -53,8 +53,6 @@ async def main():
         except Exception as db_error:
             logger.error(f"Ошибка инициализации БД: {db_error}")
             raise
-        
-        #
         
         # Запуск бота
         logger.info("Запуск бота...")

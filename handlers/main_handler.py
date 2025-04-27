@@ -26,7 +26,7 @@ async def cmd_start(message: Message):
         greeting,
         reply_markup=get_main_keyboard()
     )
-
+   
 # Команда /help
 @router.message(Command("help"))
 async def cmd_help(message: Message):
@@ -41,7 +41,6 @@ async def cmd_help(message: Message):
         "🔍 **Не забудьте воспользоваться кнопками на клавиатуре для быстрого доступа к разделам.** 🖱️",
         parse_mode="Markdown"
     )
-    
 
 # Команда /support
 @router.message(Command("support"))
@@ -68,7 +67,6 @@ async def cmd_about(message: Message):
         parse_mode="Markdown"
     )
   
-
 # Показать учебный план
 @router.message(lambda msg: msg.text == "📚 Учебный план")
 async def show_study_plan(message: Message):
@@ -144,9 +142,6 @@ async def show_groups(message: Message):
         parse_mode="MarkdownV2"
     )
 
-
-
-# В handlers/main_handler.py
 
 async def load_courses(message: Message, page: int = 0):
     conn = sqlite3.connect("bot.db")

@@ -3,11 +3,18 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message, C
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import StateFilter
 from aiogram.fsm.state import State, StatesGroup
+import sqlite3
 
 router = Router()
 
 ITEMS_PER_PAGE = 5
 
+# Функция для экранирования текста Markdown
+def escape_markdown(text: str) -> str:
+    escape_chars = r'\_*[]()~`>#+-=|{}.!'
+    return ''.join(['\\' + c if c in escape_chars else c for c in text])
+
+# Класс для работы с состоянием FSM для перехода по страницам
 class GotoPage(StatesGroup):
     waiting_for_page_number = State()
 
@@ -19,11 +26,9 @@ def get_pagination_keyboard(page: int, total_pages: int, prefix: str) -> InlineK
         buttons.append(InlineKeyboardButton(text="⬅️ Назад", callback_data=f"{prefix}:{page - 1}"))
     if page < total_pages - 1:
         buttons.append(InlineKeyboardButton(text="➡️ Вперёд", callback_data=f"{prefix}:{page + 1}"))
-
-    # Кнопка "Перейти к странице"
     buttons.append(InlineKeyboardButton(text="🔢 Перейти к странице", callback_data=f"{prefix}:goto"))
 
-    # Разбиваем на две строки, если нужно
+    # Разбиваем на две строки
     keyboard = []
     if len(buttons) > 2:
         keyboard.append(buttons[:-1])  # кнопки Назад/Вперёд
@@ -47,14 +52,35 @@ async def send_paginated_data(message: Message, items: list, formatter, callback
 
     await message.answer(text, reply_markup=keyboard)
 
+# Отправка пагинированных данных
+async def send_paginated_data(message: Message, items: list, formatter, callback_prefix: str, page: int = 0):
+    total_pages = (len(items) + ITEMS_PER_PAGE - 1) // ITEMS_PER_PAGE
+    if page >= total_pages: 
+        await message.answer("🚫 Страница не существует.")
+        return
+
+    start = page * ITEMS_PER_PAGE
+    end = start + ITEMS_PER_PAGE
+    current_items = items[start:end]
+
+    # Проверка, если на текущей странице нет элементов
+    if not current_items:
+        await message.answer("🚫 Нет данных на этой странице.")
+        return
+
+    text = "\n\n".join(formatter(item) for item in current_items)
+    text += f"\n\n📄 Страница {page + 1} из {total_pages}"
+
+    keyboard = get_pagination_keyboard(page, total_pages, callback_prefix)
+
+    await message.answer(text, reply_markup=keyboard)
+
+
 # Обработка перехода по страницам
 @router.callback_query(F.data.regexp(r'^(courses|resources|terms):(\d+)$'))
 async def paginate_callback(call: CallbackQuery):
     prefix, page = call.data.split(":")
     page = int(page)
-
-    # Здесь нужно отправить новые данные (как в send_paginated_data)
-    # Для примера покажу вызов функций, реальная загрузка зависит от проекта
     if prefix == "courses":
         from handlers.main_handler import load_courses
         await load_courses(call.message, page=page)
@@ -112,3 +138,46 @@ async def send_grouped_blocks(message: Message, items: list, formatter, block_si
         block = items[i:i + block_size]
         text = "\n\n".join(formatter(item) for item in block)
         await message.answer(text, parse_mode=parse_mode)
+
+# Загрузка курсов, ресурсов и терминов
+async def load_courses(message: Message, page: int = 0):
+    conn = sqlite3.connect("bot.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT name, description FROM courses")
+    courses = cursor.fetchall()
+    conn.close()
+
+    if not courses:
+        await message.answer("Информация о курсах отсутствует.")
+        return
+
+    # Форматируем данные и отправляем с пагинацией
+    await send_paginated_data(message, courses, lambda course: f"*{escape_markdown(course[0])}*\n{escape_markdown(course[1])}", "courses", page)
+
+async def load_resources(message: Message, page: int = 0):
+    conn = sqlite3.connect("bot.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT name, description, link FROM resources")
+    resources = cursor.fetchall()
+    conn.close()
+
+    if not resources:
+        await message.answer("Ресурсы отсутствуют.")
+        return
+
+    # Форматируем данные и отправляем с пагинацией
+    await send_paginated_data(message, resources, lambda resource: f"*{escape_markdown(resource[0])}*\n{escape_markdown(resource[1])}\n[Ссылка]({escape_markdown(resource[2])})", "resources", page)
+
+async def load_terms(message: Message, page: int = 0):
+    conn = sqlite3.connect("bot.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT term, definition FROM it_terms")
+    terms = cursor.fetchall()
+    conn.close()
+
+    if not terms:
+        await message.answer("Термины не найдены.")
+        return
+
+    # Форматируем данные и отправляем с пагинацией
+    await send_paginated_data(message, terms, lambda term: f"*{escape_markdown(term[0])}*\n{escape_markdown(term[1])}", "terms", page)
