@@ -115,7 +115,6 @@ def get_all_courses() -> List[Tuple[int, str, Any, Any]]:
         return []
 
 # Функции для Ресурсов 
-
 def add_resource(name: str, description: str, link: str) -> bool:
     try:
         with get_db_connection() as conn:
