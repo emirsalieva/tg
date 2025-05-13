@@ -204,17 +204,3 @@ async def load_resources(message: Message, page: int = 0):
         page=page
     )
 
-async def load_terms(message: Message, page: int = 0):
-    conn = sqlite3.connect("bot.db")
-    cursor = conn.cursor()
-    cursor.execute('SELECT term, definition FROM terms')
-    terms = cursor.fetchall()
-    conn.close()
-
-    await send_paginated_data(
-        message=message,
-        items=terms,
-        formatter=lambda t: f"🧠 {t[0]}\n{t[1]}",
-        callback_prefix="terms",
-        page=page
-    )
