@@ -2,9 +2,10 @@ from aiogram import Router, F
 from aiogram.types import Message
 from aiogram.filters import Command
 import sqlite3
-
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import CallbackQuery
 from keyboards.main_keyboard import get_main_keyboard
-from utils.pagination import send_paginated_data, send_grouped_blocks
+from utils.pagination import get_all_terms, send_paginated_data, send_grouped_blocks
 
 router = Router()
 
@@ -103,20 +104,45 @@ async def show_resources(message: Message):
     )
 
 # Показать словарь терминов
-@router.message(lambda msg: msg.text == "📖 Словарь IT терминов")
-async def show_terms(message: Message):
-    conn = sqlite3.connect("bot.db")
-    cursor = conn.cursor()
-    cursor.execute('SELECT term, definition FROM terms')
-    terms = cursor.fetchall()
-    conn.close()
+@router.message(F.text == "📖 Словарь IT терминов")
+async def show_terms_menu(message: Message):
+    # Клавиатура с выбором поиска
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text="🔤 Поиск по букве", callback_data="terms_by_letter"),
+            InlineKeyboardButton(text="📄 Все термины", callback_data="terms_all")
+        ]
+    ])
 
-    await send_paginated_data(
-        message=message,
-        items=terms,
-        formatter=lambda t: f"🧠 {t[0]}\n{t[1]}",
-        callback_prefix="terms"
+    await message.answer(
+        "🔤 Выберите способ поиска IT терминов:",
+        reply_markup=keyboard
     )
+@router.callback_query(F.data == "terms_by_letter")
+async def terms_by_letter(call: CallbackQuery):
+    await call.message.answer(
+        "🔤 Введите букву для поиска IT терминов (английскую или русскую):"
+    )
+    await call.answer()
+
+@router.callback_query(F.data == "terms_all")
+async def terms_all(call: CallbackQuery):
+    # Загружаем все термины из БД
+    terms = get_all_terms()
+    
+    if not terms:
+        await call.message.answer("😕 В словаре пока нет терминов.")
+        return
+
+    # Отправляем данные с пагинацией
+    await send_paginated_data(
+        message=call.message,
+        items=terms,
+        formatter=lambda t: f"<b>{t[0]}</b>\n{t[1]}",
+        callback_prefix="terms_all"
+    )
+    await call.answer()
+
 
 # Показать группы
 @router.message(lambda msg: msg.text == "👥 Группа ИНИТ")
