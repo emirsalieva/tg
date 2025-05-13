@@ -136,14 +136,7 @@ async def terms_all(call: CallbackQuery):
     if not terms:
         await call.message.answer("😕 В словаре пока нет терминов.")
         return
-    # Отправляем данные с пагинацией
-    await send_paginated_data(
-        message=call.message,
-        items=terms,
-        formatter=lambda t: f"<b>{t[0]}</b>\n{t[1]}",
-        callback_prefix="terms_all"
-    )
-    await call.answer()
+
 
 
 # Показать группы
