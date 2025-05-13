@@ -167,7 +167,7 @@ async def handle_multiple_letters(message: Message):
     await message.answer("ℹ️ Пожалуйста, введите только одну букву для поиска терминов")
 
 # ---------- ОБЩАЯ ПАГИНАЦИЯ ----------
-@router.callback_query(F.data.regexp(r'^(courses|resources|terms):(\d+)$'))
+@router.callback_query(F.data.regexp(r'^(courses|resources):(\d+)$'))
 async def paginate_callback(call: CallbackQuery):
     prefix, page = call.data.split(":")
     page = int(page)
@@ -177,12 +177,9 @@ async def paginate_callback(call: CallbackQuery):
     elif prefix == "resources":
         from handlers.main_handler import load_resources
         await load_resources(call.message, page=page)
-    elif prefix == "terms":
-        from handlers.main_handler import load_terms
-        await load_terms(call.message, page=page)
     await call.answer()
 
-@router.callback_query(F.data.regexp(r'^(courses|resources|terms):goto$'))
+@router.callback_query(F.data.regexp(r'^(courses|resources):goto$'))
 async def goto_page_prompt(call: CallbackQuery, state: FSMContext):
     prefix = call.data.split(":")[0]
     await state.update_data(prefix=prefix)
@@ -206,9 +203,6 @@ async def process_goto_page(message: Message, state: FSMContext):
         elif prefix == "resources":
             from handlers.main_handler import load_resources
             await load_resources(message, page=page)
-        elif prefix == "terms":
-            from handlers.main_handler import load_terms
-            await load_terms(message, page=page)
 
         await state.clear()
     except ValueError:
