@@ -106,7 +106,6 @@ async def show_resources(message: Message):
 # Показать словарь терминов
 @router.message(F.text == "📖 Словарь IT терминов")
 async def show_terms_menu(message: Message):
-    # Клавиатура с выбором поиска
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [
             InlineKeyboardButton(text="🔤 Поиск по букве", callback_data="terms_by_letter"),
@@ -132,13 +131,11 @@ async def terms_by_letter(call: CallbackQuery):
 
 @router.callback_query(F.data == "terms_all")
 async def terms_all(call: CallbackQuery):
-    # Загружаем все термины из БД
     terms = get_all_terms()
     
     if not terms:
         await call.message.answer("😕 В словаре пока нет терминов.")
         return
-
     # Отправляем данные с пагинацией
     await send_paginated_data(
         message=call.message,
