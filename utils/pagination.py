@@ -71,10 +71,11 @@ def get_all_terms(offset: int = 0):
     return terms
 
 def format_terms_response(terms: list, title: str) -> str:
-    response = f"📖 IT термины ({title}):\n\n"
+    response = f"📖 *IT термины ({title})*\n\n"
     for term in terms:
-        response += f"<b>{term[0]}</b>\n{term[1]}\n\n"
-    return response.strip()
+        term_name = term[0]
+        term_def = term[1]
+        response += f"*{term_name}*\n{term_def}\n\n"
 
 # ---------- СЛОВАРЬ ----------
 @router.message(F.text == "📖 Словарь IT терминов")
