@@ -37,6 +37,33 @@ async def send_paginated_data(message: Message, items: list, formatter, callback
 
     keyboard = get_pagination_keyboard(page, total_pages, callback_prefix)
     await message.answer(text, reply_markup=keyboard)
+    
+# Термины пагинация
+def format_term(term: tuple) -> str:
+    return f"*{term[0]}*\n{term[1]}"
+def get_pagination_keyboard(page: int, total_pages: int, prefix: str) -> InlineKeyboardMarkup:
+    buttons = []
+
+    if page > 0:
+        buttons.append(InlineKeyboardButton(text="⬅️ Назад", callback_data=f"{prefix}{page - 1}"))
+    if page < total_pages - 1:
+        buttons.append(InlineKeyboardButton(text="➡️ Вперёд", callback_data=f"{prefix}{page + 1}"))
+
+    return InlineKeyboardMarkup(inline_keyboard=[buttons]) if buttons else None
+
+async def send_terms_page(message: Message, terms: list, page: int):
+    total_pages = (len(terms) + ITEMS_PER_PAGE - 1) // ITEMS_PER_PAGE
+    start = page * ITEMS_PER_PAGE
+    end = start + ITEMS_PER_PAGE
+    current_terms = terms[start:end]
+
+    text = "\n\n".join(format_term(term) for term in current_terms)
+    text += f"\n\n📄 Страница {page + 1} из {total_pages}"
+    
+    keyboard = get_pagination_keyboard(page, total_pages, "terms_page_")
+
+    await message.answer(text, reply_markup=keyboard, parse_mode="Markdown")
+
 
 # ---------- ТЕРМИНЫ: ФУНКЦИИ И КЛАВИАТУРА ----------
 def get_terms_pagination_keyboard(letter: str, page: int, has_next_page: bool) -> InlineKeyboardMarkup:

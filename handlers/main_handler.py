@@ -5,7 +5,7 @@ import sqlite3
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.types import CallbackQuery
 from keyboards.main_keyboard import get_main_keyboard
-from utils.pagination import get_all_terms, send_paginated_data, send_grouped_blocks
+from utils.pagination import get_all_terms, send_paginated_data, send_grouped_blocks, send_terms_page
 
 router = Router()
 
@@ -132,12 +132,23 @@ async def terms_by_letter(call: CallbackQuery):
 @router.callback_query(F.data == "terms_all")
 async def terms_all(call: CallbackQuery):
     terms = get_all_terms()
-    
+
     if not terms:
         await call.message.answer("😕 В словаре пока нет терминов.")
         return
 
+    await send_terms_page(call.message, terms, page=0)
+    await call.answer()
 
+
+@router.callback_query(F.data.startswith("terms_page_"))
+async def terms_pagination(call: CallbackQuery):
+    page = int(call.data.split("_")[-1])
+    terms = get_all_terms()
+
+    await call.message.delete()
+    await send_terms_page(call.message, terms, page)
+    await call.answer()
 
 # Показать группы
 @router.message(lambda msg: msg.text == "👥 Группа ИНИТ")
