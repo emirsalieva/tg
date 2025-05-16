@@ -14,10 +14,9 @@ from database.db_manager import get_items_page, get_total_items_count
 from utils.pagination_admin import register_pagination_handlers 
 from utils.pagination import router as pagination_router
 
-
-# Настройка логирования
+# Настройка логирования (только ошибки и критические сбои)
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.ERROR,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
@@ -45,32 +44,29 @@ async def main():
         # Регистрация пагинации для админского роутера
         register_pagination_handlers(admin_router, check_admin_access, get_items_page, get_total_items_count)
 
-        # Инициализация БД
-        logger.info("Инициализация базы данных...")
+        # Инициализация базы данных
         try:
             init_db()
-            logger.info("База данных успешно инициализирована.")
         except Exception as db_error:
             logger.error(f"Ошибка инициализации БД: {db_error}")
             raise
         
         # Запуск бота
-        logger.info("Запуск бота...")
         await dp.start_polling(bot)
-        
+
     except KeyboardInterrupt:
-        logger.info("Бот остановлен пользователем.")
+        logger.error("Бот остановлен пользователем.")
     except Exception as e:
         logger.critical(f"Критическая ошибка: {e}")
         raise
     finally:
-        logger.info("Завершение работы бота...")
+        logger.error("Завершение работы бота...")
         await bot.close() if 'bot' in locals() else None
 
 if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        logger.info("Программа завершена пользователем.")
+        logger.error("Программа завершена пользователем.")
     except Exception as e:
         logger.critical(f"Фатальная ошибка: {e}")
