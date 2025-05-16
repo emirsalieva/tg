@@ -1,11 +1,9 @@
 import logging
 from aiogram import Bot, Dispatcher
-from aiogram.types import BotCommand
 from dotenv import load_dotenv
 import os
 import asyncio
 
-# Импортируем роутеры
 from handlers.main_handler import router as handlers_router
 from handlers.admin_handlers import router as admin_router
 from database.db_manager import init_db
@@ -14,14 +12,12 @@ from database.db_manager import get_items_page, get_total_items_count
 from utils.pagination_admin import register_pagination_handlers 
 from utils.pagination import router as pagination_router
 
-# Настройка логирования (только ошибки и критические сбои)
 logging.basicConfig(
     level=logging.ERROR,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
-# Загрузка переменных окружения
 load_dotenv()
 
 async def main():
@@ -32,26 +28,21 @@ async def main():
         if not BOT_TOKEN:
             raise ValueError("BOT_TOKEN не найден в переменных окружения.")
         
-        # Инициализация бота
         bot = Bot(token=BOT_TOKEN)
         dp = Dispatcher()
 
-        # Подключение роутеров
         dp.include_router(handlers_router)
         dp.include_router(admin_router)
         dp.include_router(pagination_router)
 
-        # Регистрация пагинации для админского роутера
         register_pagination_handlers(admin_router, check_admin_access, get_items_page, get_total_items_count)
 
-        # Инициализация базы данных
         try:
             init_db()
         except Exception as db_error:
             logger.error(f"Ошибка инициализации БД: {db_error}")
             raise
-        
-        # Запуск бота
+
         await dp.start_polling(bot)
 
     except KeyboardInterrupt:
