@@ -134,3 +134,5 @@ Railway автоматически соберет проект и запусти
 Telegram: @yokai_di
 
 Email: lalipashka@gmail.com
+
+Номер: +996709697950
