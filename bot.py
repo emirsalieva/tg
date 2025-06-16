@@ -23,7 +23,6 @@ load_dotenv()
 async def main():
     """Основная функция запуска бота"""
     try:
-        # Получение токена
         BOT_TOKEN = os.getenv("BOT_TOKEN")
         if not BOT_TOKEN:
             raise ValueError("BOT_TOKEN не найден в переменных окружения.")
